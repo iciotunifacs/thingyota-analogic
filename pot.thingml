@@ -1,0 +1,33 @@
+import "datatypes.thingml"
+
+
+thing fragment POTmsgs 
+{
+	message read_value(val: UInt32);
+}
+thing POT includes POTmsgs, TimerMsgs {
+
+	property PIN: UInt8 = 16
+
+    required port clock {
+		receives ms25_tic
+	}
+	
+    provided port potValue 
+	@sync_send "true"
+	{
+		sends read_value
+	}
+
+	function getValue(pin: UInt8) do
+		`analogRead(`&pin&`);`
+	end
+	
+	statechart POT init READY {
+		state READY {
+			internal event clock?ms25_tic action do
+                potValue!read_value(getValue(PIN))
+            end
+		}
+	}
+}
