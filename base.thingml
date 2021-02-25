@@ -1,0 +1,50 @@
+import "LED.thingml"
+import "pot.thingml"
+import "datatypes.thingml"
+
+thing Base includes TimerMsgs, LEDMsgs, POTmsgs { 
+
+	required port timer 
+	@sync_send "true"
+	{
+		receives timer_timeout
+		sends timer_start, timer_cancel
+	}
+	
+	required port ledRed {
+		sends led_ON, led_OFF
+	}
+	required port pot {
+		receives read_value
+	}
+	
+
+	statechart TrafficLights init READY {
+	
+		state READY {
+			on entry do 
+				ledRed!led_OFF()
+			end            
+		}	
+		
+		state SHINY {
+			on entry do 
+				ledRed!led_ON()
+			end
+		}
+	}
+}
+
+protocol Timer;
+
+configuration Base
+{
+	instance Base : Base
+	instance pot : POT
+		set pot.PIN = 16
+	instance ledRed : LED 
+		set ledRed.PIN = 8
+	
+	connector Base.ledRed => ledRed.ctrl
+	connector Base.pot => pot.potValue
+}
