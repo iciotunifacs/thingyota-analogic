@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultTextAlignment left
+caption Behavior of thing Base
+[*] --> TrafficLights
+state TrafficLights{
+state READY{
+	READY : entry / do\n	ledRed!led_OFF()\nend\n
+	READY : e:pot?read_value / \naction do\n	if (e.val > 100) do\n		ledRed!led_ON()\n	end\nend\n
+}
+[*] --> READY
+}
+@enduml

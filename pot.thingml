@@ -19,7 +19,7 @@ thing POT includes POTmsgs, TimerMsgs {
 		sends read_value
 	}
 
-	function getValue(pin: UInt8) do
+	function getValue(pin: UInt8): UInt32 do
 		`analogRead(`&pin&`);`
 	end
 	

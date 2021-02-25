@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultTextAlignment left
+caption Behavior of thing Base
+[*] --> TrafficLights
+state TrafficLights{
+state READY{
+	READY : entry / ...\n
+	READY : e:pot?read_value / \naction ...\n
+}
+[*] --> READY
+}
+@enduml

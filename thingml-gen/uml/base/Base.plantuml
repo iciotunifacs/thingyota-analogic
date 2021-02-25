@@ -1,0 +1,11 @@
+@startuml
+caption Instances and Connectors in configuration Base
+component [Base : Base]<<PIM>>
+component [pot : POT]<<PSM>>
+component [ledRed : LED]<<PSM>>
+boundary Timer
+[Base : Base] -(0- [pot : POT] : pot => potValue
+[Base : Base] -(0- [ledRed : LED] : ledRed => ctrl
+[Base : Base] .. Timer : timer
+[pot : POT] .. Timer : clock
+@enduml

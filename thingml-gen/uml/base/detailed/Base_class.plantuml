@@ -1,0 +1,58 @@
+@startuml
+caption Things used in configuration Base
+class Base <<(T,#5BBF09)PIM>> {
+..▼ Port timer ▼..
+▶ timer_timeout
+◀ timer_start
+◀ timer_cancel
+..▼ Port ledRed ▼..
+◀ led_ON
+◀ led_OFF
+..▼ Port pot ▼..
+▶ read_value
+}
+class TimerMsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-timer_start(id : UInt8, time : UInt32)
+-timer_cancel(id : UInt8)
+-timer_timeout(id : UInt8)
+-ms25_tic()
+-ms100_tic()
+-ms500_tic()
+}
+class LEDMsgs <<(T,#5BBF09)PIM>> {
+..Messages..
+-led_ON()
+-led_OFF()
+}
+class POTmsgs <<(F,#BC74ED)Fragment>> {
+..Messages..
+-read_value(val : UInt32)
+}
+class POT <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 16
+..▼ Port clock ▼..
+▶ ms25_tic
+..▲ Port potValue ▲..
+◀ read_value
+..Functions..
+-getValue(pin : UInt8) : void
+}
+class LED <<(T,#F94918)PSM>> {
+..Properties..
+-PIN : UInt8 = 10
+..▲ Port ctrl ▲..
+▶ led_ON
+▶ led_OFF
+..Functions..
+-setDigitalOutput(pin : UInt8) : void
+-digitalWrite(pin : UInt8, value : DigitalState) : void
+}
+TimerMsgs <|-- Base
+LEDMsgs <|-- Base
+POTmsgs <|-- Base
+POTmsgs <|-- POT
+TimerMsgs <|-- POT
+LEDMsgs <|-- LED
+@enduml

@@ -24,14 +24,13 @@ thing Base includes TimerMsgs, LEDMsgs, POTmsgs {
 		state READY {
 			on entry do 
 				ledRed!led_OFF()
-			end            
-		}	
-		
-		state SHINY {
-			on entry do 
-				ledRed!led_ON()
 			end
-		}
+            internal event e: pot?read_value action do
+                if (e.val > 100) do
+                    ledRed!led_ON()
+                end
+            end
+		}	
 	}
 }
 
@@ -43,8 +42,11 @@ configuration Base
 	instance pot : POT
 		set pot.PIN = 16
 	instance ledRed : LED 
-		set ledRed.PIN = 8
+		set ledRed.PIN = 4
 	
 	connector Base.ledRed => ledRed.ctrl
 	connector Base.pot => pot.potValue
+    connector Base.timer over Timer
+    connector pot.clock over Timer
+
 }

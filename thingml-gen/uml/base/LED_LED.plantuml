@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultTextAlignment left
+caption Behavior of thing LED
+[*] --> LED
+state LED{
+state READY_2{
+	READY_2 : ctrl?led_ON / \naction ...\n
+	READY_2 : ctrl?led_OFF / \naction ...\n
+}
+[*] --> READY_2
+	LED : entry / ...\n
+}
+@enduml

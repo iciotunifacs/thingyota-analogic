@@ -61,7 +61,7 @@ thing POT includes POTmsgs , TimerMsgs {
 		sends read_value
 	}
 	property PIN : UInt8 = 16
-	function getValue(pin : UInt8) do
+	function getValue(pin : UInt8) : UInt32 do
 		`analogRead(` & pin & `);`
 	end
 	statechart POT init READY {
@@ -160,5 +160,5 @@ configuration Base {
 	connector Base.timer over Timer
 	connector pot.clock over Timer
 	set pot.PIN = 16
-	set ledRed.PIN = 8
+	set ledRed.PIN = 4
 }
