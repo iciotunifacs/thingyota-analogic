@@ -10,14 +10,14 @@ thing Base includes TimerMsgs , LEDMsgs , POTmsgs {
 	}
 	statechart TrafficLights init READY {
 		state READY {
-			on entry do
-				ledRed!led_OFF()
-			end
 			internal
 			event e : pot?read_value
 			action do
-				if (e.val > 100) do
+				if (e.val > 50) do
 					ledRed!led_ON()
+				end
+				if (e.val < 50) do
+					ledRed!led_OFF()
 				end
 			end
 		}

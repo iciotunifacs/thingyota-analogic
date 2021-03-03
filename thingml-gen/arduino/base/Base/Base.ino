@@ -26,8 +26,8 @@ void register_POT_send_potValue_read_value_listener(void (*_listener)(struct POT
 void register_external_POT_send_potValue_read_value_listener(void (*_listener)(struct POT_Instance *, uint32_t));
 
 // Definition of the states:
-#define POT_POT_READY_STATE 0
-#define POT_POT_STATE 1
+#define POT_POT_STATE 0
+#define POT_POT_READY_STATE 1
 
 
 /*****************************************************************************
@@ -62,8 +62,8 @@ void register_Base_send_ledRed_led_OFF_listener(void (*_listener)(struct Base_In
 void register_external_Base_send_ledRed_led_OFF_listener(void (*_listener)(struct Base_Instance *));
 
 // Definition of the states:
-#define BASE_TRAFFICLIGHTS_READY_STATE 0
-#define BASE_TRAFFICLIGHTS_STATE 1
+#define BASE_TRAFFICLIGHTS_STATE 0
+#define BASE_TRAFFICLIGHTS_READY_STATE 1
 
 
 /*****************************************************************************
@@ -85,13 +85,13 @@ uint8_t LED_PIN_var;
 };
 // Declaration of prototypes outgoing messages :
 void LED_LED_OnEntry(int state, struct LED_Instance *_instance);
-void LED_handle_ctrl_led_ON(struct LED_Instance *_instance);
 void LED_handle_ctrl_led_OFF(struct LED_Instance *_instance);
+void LED_handle_ctrl_led_ON(struct LED_Instance *_instance);
 // Declaration of callbacks for incoming messages:
 
 // Definition of the states:
-#define LED_LED_STATE 0
-#define LED_LED_READY_STATE 1
+#define LED_LED_READY_STATE 0
+#define LED_LED_STATE 1
 
 
 
@@ -431,7 +431,6 @@ Base_TrafficLights_OnEntry(_instance->Base_TrafficLights_State, _instance);
 break;
 }
 case BASE_TRAFFICLIGHTS_READY_STATE:{
-Base_send_ledRed_led_OFF(_instance);
 break;
 }
 default: break;
@@ -457,8 +456,12 @@ if(!(_instance->active)) return;
 uint8_t Base_TrafficLights_State_event_consumed = 0;
 if (_instance->Base_TrafficLights_State == BASE_TRAFFICLIGHTS_READY_STATE) {
 if (Base_TrafficLights_State_event_consumed == 0 && 1) {
-if(val > 100) {
+if(val > 50) {
 Base_send_ledRed_led_ON(_instance);
+
+}
+if(val < 50) {
+Base_send_ledRed_led_OFF(_instance);
 
 }
 Base_TrafficLights_State_event_consumed = 1;
@@ -578,20 +581,6 @@ default: break;
 }
 
 // Event Handlers for incoming messages:
-void LED_handle_ctrl_led_ON(struct LED_Instance *_instance) {
-if(!(_instance->active)) return;
-//Region LED
-uint8_t LED_LED_State_event_consumed = 0;
-if (_instance->LED_LED_State == LED_LED_READY_STATE) {
-if (LED_LED_State_event_consumed == 0 && 1) {
-f_LED_digitalWrite(_instance, _instance->LED_PIN_var, DIGITALSTATE_HIGH);
-LED_LED_State_event_consumed = 1;
-}
-}
-//End Region LED
-//End dsregion LED
-//Session list: 
-}
 void LED_handle_ctrl_led_OFF(struct LED_Instance *_instance) {
 if(!(_instance->active)) return;
 //Region LED
@@ -599,6 +588,20 @@ uint8_t LED_LED_State_event_consumed = 0;
 if (_instance->LED_LED_State == LED_LED_READY_STATE) {
 if (LED_LED_State_event_consumed == 0 && 1) {
 f_LED_digitalWrite(_instance, _instance->LED_PIN_var, DIGITALSTATE_LOW);
+LED_LED_State_event_consumed = 1;
+}
+}
+//End Region LED
+//End dsregion LED
+//Session list: 
+}
+void LED_handle_ctrl_led_ON(struct LED_Instance *_instance) {
+if(!(_instance->active)) return;
+//Region LED
+uint8_t LED_LED_State_event_consumed = 0;
+if (_instance->LED_LED_State == LED_LED_READY_STATE) {
+if (LED_LED_State_event_consumed == 0 && 1) {
+f_LED_digitalWrite(_instance, _instance->LED_PIN_var, DIGITALSTATE_HIGH);
 LED_LED_State_event_consumed = 1;
 }
 }
@@ -623,18 +626,18 @@ LED_LED_State_event_consumed = 1;
 // Variables for the properties of the instance
 struct Base_Instance Base_var;
 // Variables for the sessions of the instance
-//Instance pot
-// Variables for the properties of the instance
-struct POT_Instance pot_var;
-// Variables for the sessions of the instance
 //Instance ledRed
 // Variables for the properties of the instance
 struct LED_Instance ledRed_var;
 // Variables for the sessions of the instance
+//Instance pot
+// Variables for the properties of the instance
+struct POT_Instance pot_var;
+// Variables for the sessions of the instance
 
 
-// Enqueue of messages Base::ledRed::led_ON
-void enqueue_Base_send_ledRed_led_ON(struct Base_Instance *_instance){
+// Enqueue of messages Base::ledRed::led_OFF
+void enqueue_Base_send_ledRed_led_OFF(struct Base_Instance *_instance){
 if ( fifo_byte_available() > 4 ) {
 
 _fifo_enqueue( (3 >> 8) & 0xFF );
@@ -645,8 +648,8 @@ _fifo_enqueue( (_instance->id_ledRed >> 8) & 0xFF );
 _fifo_enqueue( _instance->id_ledRed & 0xFF );
 }
 }
-// Enqueue of messages Base::ledRed::led_OFF
-void enqueue_Base_send_ledRed_led_OFF(struct Base_Instance *_instance){
+// Enqueue of messages Base::ledRed::led_ON
+void enqueue_Base_send_ledRed_led_ON(struct Base_Instance *_instance){
 if ( fifo_byte_available() > 4 ) {
 
 _fifo_enqueue( (4 >> 8) & 0xFF );
@@ -660,8 +663,19 @@ _fifo_enqueue( _instance->id_ledRed & 0xFF );
 
 
 //New dispatcher for messages
-void dispatch_timer_timeout(uint16_t sender, uint8_t param_id) {
+void dispatch_ms25_tic(uint16_t sender) {
 if (sender == timer2_instance.listener_id) {
+POT_handle_clock_ms25_tic(&pot_var);
+
+}
+
+}
+
+
+//New dispatcher for messages
+void dispatch_led_OFF(uint16_t sender) {
+if (sender == Base_var.id_ledRed) {
+LED_handle_ctrl_led_OFF(&ledRed_var);
 
 }
 
@@ -672,6 +686,15 @@ if (sender == timer2_instance.listener_id) {
 void dispatch_led_ON(uint16_t sender) {
 if (sender == Base_var.id_ledRed) {
 LED_handle_ctrl_led_ON(&ledRed_var);
+
+}
+
+}
+
+
+//New dispatcher for messages
+void dispatch_timer_timeout(uint16_t sender, uint8_t param_id) {
+if (sender == timer2_instance.listener_id) {
 
 }
 
@@ -691,26 +714,6 @@ void sync_dispatch_POT_send_potValue_read_value(struct POT_Instance *_instance, 
 dispatch_read_value(_instance->id_potValue, val);
 }
 
-//New dispatcher for messages
-void dispatch_led_OFF(uint16_t sender) {
-if (sender == Base_var.id_ledRed) {
-LED_handle_ctrl_led_OFF(&ledRed_var);
-
-}
-
-}
-
-
-//New dispatcher for messages
-void dispatch_ms25_tic(uint16_t sender) {
-if (sender == timer2_instance.listener_id) {
-POT_handle_clock_ms25_tic(&pot_var);
-
-}
-
-}
-
-
 int processMessageQueue() {
 if (fifo_empty()) return 0; // return 0 if there is nothing to do
 
@@ -723,7 +726,21 @@ code += fifo_dequeue();
 
 // Switch to call the appropriate handler
 switch(code) {
+case 2:{
+byte mbuf[4 - 2];
+while (mbufi < (4 - 2)) mbuf[mbufi++] = fifo_dequeue();
+uint8_t mbufi_ms25_tic = 2;
+dispatch_ms25_tic((mbuf[0] << 8) + mbuf[1] /* instance port*/);
+break;
+}
 case 3:{
+byte mbuf[4 - 2];
+while (mbufi < (4 - 2)) mbuf[mbufi++] = fifo_dequeue();
+uint8_t mbufi_led_OFF = 2;
+dispatch_led_OFF((mbuf[0] << 8) + mbuf[1] /* instance port*/);
+break;
+}
+case 4:{
 byte mbuf[4 - 2];
 while (mbufi < (4 - 2)) mbuf[mbufi++] = fifo_dequeue();
 uint8_t mbufi_led_ON = 2;
@@ -742,20 +759,6 @@ u_timer_timeout_id.bytebuffer[0] = mbuf[mbufi_timer_timeout + 0];
 mbufi_timer_timeout += 1;
 dispatch_timer_timeout((mbuf[0] << 8) + mbuf[1] /* instance port*/,
  u_timer_timeout_id.p /* id */ );
-break;
-}
-case 4:{
-byte mbuf[4 - 2];
-while (mbufi < (4 - 2)) mbuf[mbufi++] = fifo_dequeue();
-uint8_t mbufi_led_OFF = 2;
-dispatch_led_OFF((mbuf[0] << 8) + mbuf[1] /* instance port*/);
-break;
-}
-case 2:{
-byte mbuf[4 - 2];
-while (mbufi < (4 - 2)) mbuf[mbufi++] = fifo_dequeue();
-uint8_t mbufi_ms25_tic = 2;
-dispatch_ms25_tic((mbuf[0] << 8) + mbuf[1] /* instance port*/);
 break;
 }
 }
@@ -778,12 +781,12 @@ void externalMessageEnqueue(uint8_t * msg, uint8_t msgSize, uint16_t listener_id
 if ((msgSize >= 2) && (msg != NULL)) {
 uint8_t msgSizeOK = 0;
 switch(msg[0] * 256 + msg[1]) {
-case 1:
-if(msgSize == 3) {
-msgSizeOK = 1;}
-break;
 case 2:
 if(msgSize == 2) {
+msgSizeOK = 1;}
+break;
+case 1:
+if(msgSize == 3) {
 msgSizeOK = 1;}
 break;
 }
@@ -808,8 +811,8 @@ void initialize_configuration_Base() {
 // Initialize connectors
 register_external_Base_send_timer_timer_start_listener(&forward_Base_send_timer_timer_start);
 register_external_Base_send_timer_timer_cancel_listener(&forward_Base_send_timer_timer_cancel);
-register_Base_send_ledRed_led_ON_listener(&enqueue_Base_send_ledRed_led_ON);
 register_Base_send_ledRed_led_OFF_listener(&enqueue_Base_send_ledRed_led_OFF);
+register_Base_send_ledRed_led_ON_listener(&enqueue_Base_send_ledRed_led_ON);
 register_POT_send_potValue_read_value_listener(&sync_dispatch_POT_send_potValue_read_value);
 
 // Init the ID, state variables and properties for external connector timer2
@@ -823,6 +826,13 @@ timer2_setup();
 
 // End Network Initialization
 
+// Init the ID, state variables and properties for instance ledRed
+ledRed_var.active = true;
+ledRed_var.id_ctrl = add_instance( (void*) &ledRed_var);
+ledRed_var.LED_LED_State = LED_LED_READY_STATE;
+ledRed_var.LED_PIN_var = 4;
+
+LED_LED_OnEntry(LED_LED_STATE, &ledRed_var);
 // Init the ID, state variables and properties for instance pot
 pot_var.active = true;
 pot_var.id_clock = add_instance( (void*) &pot_var);
@@ -831,13 +841,6 @@ pot_var.POT_POT_State = POT_POT_READY_STATE;
 pot_var.POT_PIN_var = 16;
 
 POT_POT_OnEntry(POT_POT_STATE, &pot_var);
-// Init the ID, state variables and properties for instance ledRed
-ledRed_var.active = true;
-ledRed_var.id_ctrl = add_instance( (void*) &ledRed_var);
-ledRed_var.LED_LED_State = LED_LED_READY_STATE;
-ledRed_var.LED_PIN_var = 4;
-
-LED_LED_OnEntry(LED_LED_STATE, &ledRed_var);
 // Init the ID, state variables and properties for instance Base
 Base_var.active = true;
 Base_var.id_timer = add_instance( (void*) &Base_var);
